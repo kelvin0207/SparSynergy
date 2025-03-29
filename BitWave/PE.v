@@ -22,7 +22,7 @@
 
 module PE(
     input   wire            clk,
-    input   wire            rst,
+    input   wire            rstn,
     input   wire    [255:0] activations,     // 4*8 activations *8bit
     input   wire            activation_valid,
     input   wire    [31:0]  weight_column,   // 4*1 weight col *8bit
@@ -30,7 +30,7 @@ module PE(
     input   wire            weight_valid,
     input   wire    [11:0]  shift_offset, // 4 shift * 3bit
     input   wire    [1:0]   acc_en,
-    input   wire            zcip_done,
+    input   wire    [3:0]   zcip_done,
     output  wire    [63:0]  result, // 63bit for 1\2\4 results.
     // output  wire    [1:0]   status,
     output  wire            done
@@ -51,14 +51,14 @@ module PE(
     wire [15:0] BCE_result2;
     wire [15:0] BCE_result3;
 
-    assign BCE_done0 = zcip_done;
-    assign BCE_done1 = zcip_done;
-    assign BCE_done2 = zcip_done;
-    assign BCE_done3 = zcip_done;
+    assign BCE_done0 = zcip_done[0];
+    assign BCE_done1 = zcip_done[1];
+    assign BCE_done2 = zcip_done[2];
+    assign BCE_done3 = zcip_done[3];
 
     BCE BCE0(
         .clk            (clk),
-        .rst            (rst),
+        .rstn            (rstn),
         .activations    (activations[63:0]), //8*8bit
         .weight_column  (weight_column[7:0]),  // 1*8bit
         .weight_sign_en (weight_sign_en),
@@ -70,7 +70,7 @@ module PE(
 
     BCE BCE1(
         .clk            (clk),
-        .rst            (rst),
+        .rstn            (rstn),
         .activations    (activations[127:64]),    // 8*8bit
         .weight_column  (weight_column[15:8]),    // 1*8bit
         .weight_sign_en (weight_sign_en),
@@ -82,7 +82,7 @@ module PE(
 
     BCE BCE2(
         .clk            (clk),
-        .rst            (rst),
+        .rstn            (rstn),
         .activations    (activations[191:128]),   // 8*8bit
         .weight_column  (weight_column[23:16]),   // 1*8bit
         .weight_sign_en (weight_sign_en),
@@ -94,7 +94,7 @@ module PE(
 
     BCE BCE3(
         .clk            (clk),
-        .rst            (rst),
+        .rstn            (rstn),
         .activations    (activations[255:192]),   // 8*8bit
         .weight_column  (weight_column[31:24]),   // 1*8bit
         .weight_sign_en (weight_sign_en),
@@ -110,7 +110,7 @@ module PE(
 
     Accumulator InterAcc(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .en         (acc_en),
         .in0        (BCE_result0),
         .in1        (BCE_result1),

@@ -35,7 +35,7 @@ module spTensorCore #(
     parameter C_ADDR_WIDTH    = 3
     )(
         input wire                      clk,
-        input wire                      rst,
+        input wire                      rstn,
         input wire                      start,
         input wire                      fetch_done,
         input wire [A_DATA_WIDTH*4-1:0] a_data_in,
@@ -105,7 +105,7 @@ module spTensorCore #(
     assign compute_out = &compute;
     assign write_back_out = &write_back;
     
-    assign result_out = {result_out0, result_out1, result_out2, result_out3};
+    assign result_out = {result_out3, result_out2, result_out1, result_out0};
 
     spOctet#(
         .A_DATA_WIDTH    (A_DATA_WIDTH ),
@@ -122,7 +122,7 @@ module spTensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )spOctet0(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in0),
@@ -151,7 +151,7 @@ module spTensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )spOctet1(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in1),
@@ -180,7 +180,7 @@ module spTensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )spOctet2(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in2),
@@ -209,7 +209,7 @@ module spTensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )spOctet3(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in3),

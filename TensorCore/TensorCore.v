@@ -35,7 +35,7 @@ module TensorCore #(
     parameter C_ADDR_WIDTH    = 3
     )(
         input wire                      clk,
-        input wire                      rst,
+        input wire                      rstn,
         input wire                      start,
         input wire                      fetch_done,
         input wire [A_DATA_WIDTH*4-1:0] a_data_in,
@@ -111,7 +111,7 @@ module TensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )Octet0(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in0),
@@ -139,7 +139,7 @@ module TensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )Octet1(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in1),
@@ -167,7 +167,7 @@ module TensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )Octet2(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in2),
@@ -195,7 +195,7 @@ module TensorCore #(
         .C_ADDR_WIDTH    (C_ADDR_WIDTH)
     )Octet3(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .start      (start),
         .fetch_done (fetch_done),
         .a_data_in  (a_data_in3),

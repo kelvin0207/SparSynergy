@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer:  
+// Engineer: Yang Jingkui
 // 
 // Create Date: 2024/08/27 09:39:16
 // Design Name: Top Controller
@@ -20,7 +20,7 @@
 
 module BCE (
     input wire clk,
-    input wire rst,
+    input wire rstn,
     input wire [63:0] activations,       // 8 * 8-bit activation inputs
     input wire [7:0]  weight_column,     // 8-bit weight bit column (1-bit column replicated)
     input wire 		  weight_sign_en,       // Sign bit for the weight column signal, data using weight_col
@@ -56,7 +56,7 @@ module BCE (
 
     // ZCIP ZCIP(
     //     .clk            (clk),
-    //     .rst            (rst),
+    //     .rstn            (rstn),
     //     .index_vector   (index_vector),
     //     .shift_offset   (shift_offset),
     //     .valid          (valid),
@@ -68,13 +68,17 @@ module BCE (
 	reg [7:0] 	weight_column_reg;
 	reg [2:0] 	shift_offset_reg;
 
-	always@(posedge clk or posedge rst) begin
-		if (rst) begin
+	reg         valid_tmp;
+	reg         done_reg;
+	
+	always@(posedge clk or negedge rstn) begin
+		if (!rstn) begin
 			weight_sign			<= 0;
 			activations_reg		<= 0;
 			weight_column_reg	<= 0;
 			shift_offset_reg	<= 0;
-			valid               <= 0;
+			valid_tmp           <= 0;
+			done_reg			<= 0;
 		end
 		else if(weight_sign_en)begin
 			weight_sign		<= weight_column;
@@ -83,7 +87,8 @@ module BCE (
 			activations_reg		<= activations;
 			weight_column_reg	<= weight_column;
 			shift_offset_reg	<= shift_offset;
-			valid               <= 1;
+			valid_tmp           <= 1;
+			done_reg			<= done;
 		end
 	end
 
@@ -152,38 +157,90 @@ module BCE (
 		.product	(product7)
 	);
 
-	wire	[8:0] psum0;
-	wire	[8:0] psum1;
-	wire	[8:0] psum2;
-	wire	[8:0] psum3;
+	reg [7:0] product0_reg;
+	reg [7:0] product1_reg;
+	reg [7:0] product2_reg;
+	reg [7:0] product3_reg;
+	reg [7:0] product4_reg;
+	reg [7:0] product5_reg;
+	reg [7:0] product6_reg;
+	reg [7:0] product7_reg;
+	reg       valid_tmp2;
+	reg		  done_reg2;
 
-	assign psum0 = {product0[7], product0} + {product1[7], product1};
-	assign psum1 = {product2[7], product2} + {product3[7], product3};
-	assign psum2 = {product4[7], product4} + {product5[7], product5};
-	assign psum3 = {product6[7], product6} + {product7[7], product7};
-
-	wire	[9:0] psum4;
-	wire	[9:0] psum5;
-
-	assign psum4 = {psum0[8], psum0} + {psum1[8], psum1};
-	assign psum5 = {psum2[8], psum2} + {psum3[8], psum3};
+	always @(posedge clk or negedge rstn) begin
+		if (!rstn) begin
+			product0_reg	<= 0;
+			product1_reg	<= 0;
+			product2_reg	<= 0;
+			product3_reg	<= 0;
+			product4_reg	<= 0;
+			product5_reg	<= 0;
+			product6_reg	<= 0;
+			product7_reg	<= 0;
+			valid_tmp2      <= 0;
+			done_reg2		<= 0;
+		end else begin
+		  	product0_reg	<= product0;
+			product1_reg	<= product1;
+			product2_reg	<= product2;
+			product3_reg	<= product3;
+			product4_reg	<= product4;
+			product5_reg	<= product5;
+			product6_reg	<= product6;
+			product7_reg	<= product7;
+			valid_tmp2		<= valid_tmp;
+			done_reg2		<= done_reg;
+		end
+	end
 
 	wire	[10:0] psum_total;
 
-	assign psum_total = {psum4[9], psum4} + {psum5[9], psum5};
+	psum psum(
+    	.product0	(product0_reg),
+		.product1	(product1_reg),
+		.product2	(product2_reg),
+		.product3	(product3_reg),
+    	.product4	(product4_reg),
+		.product5	(product5_reg),
+		.product6	(product6_reg),
+		.product7	(product7_reg),
+    	.psum_total	(psum_total)
+	);
+
+	// wire	[8:0] psum0;
+	// wire	[8:0] psum1;
+	// wire	[8:0] psum2;
+	// wire	[8:0] psum3;
+
+	// assign psum0 = {product0[7], product0} + {product1[7], product1};
+	// assign psum1 = {product2[7], product2} + {product3[7], product3};
+	// assign psum2 = {product4[7], product4} + {product5[7], product5};
+	// assign psum3 = {product6[7], product6} + {product7[7], product7};
+
+	// wire	[9:0] psum4;
+	// wire	[9:0] psum5;
+
+	// assign psum4 = {psum0[8], psum0} + {psum1[8], psum1};
+	// assign psum5 = {psum2[8], psum2} + {psum3[8], psum3};
+
+	// wire	[10:0] psum_total;
+
+	// assign psum_total = {psum4[9], psum4} + {psum5[9], psum5};
 
 	wire	[15:0]	psum_shift;
-
+	// Area cost ~ 10
 	assign psum_shift = psum_total << shift_offset_reg;
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             result <= 16'b0;
+			valid  <= 0;
         end else begin
-            if (valid) begin
+			valid  <= valid_tmp2;
+            if (valid_tmp2) begin
                 result <= result + psum_shift;
-            end
-			else if (done) begin
+            end else if (done_reg2) begin
 				result <= 0;
 			end
         end

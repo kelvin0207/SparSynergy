@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer:  
+// Engineer: Yang Jingkui
 // 
 // Create Date: 2024/08/27 09:39:16
 // Design Name: Top Controller
@@ -22,20 +22,20 @@
 
 module Controller(
     input wire          clk,
-    input wire          rst,
+    input wire          rstn,
     input wire          dispatcher_done,
     input wire          pe_done,
     input wire          zcip_done,
     input wire          empty,
-    input wire [223:0]  index_vector_buffer,
-    input wire          index_en, //  index_vector buffer
+    input wire [895:0]  index_vector_buffer,
+    input wire          index_en, // 更新index_vector buffer
     output reg [1:0]   a_mode,
     output reg [1:0]   w_mode,
     output reg [5:0]   w_read_address,
     output reg [5:0]   a_read_address,
     output reg         en,
     output reg [1:0]   acc_en,
-    output reg [223:0] index_vector, // 32*7bit
+    output reg [895:0] index_vector, // 32*7bit
     output reg         weight_sign_en,
     output reg [5:0]   w_write_address,
     output reg [5:0]   a_write_address,
@@ -46,7 +46,7 @@ module Controller(
     output reg         done
     );
 
-    //  
+    // 状态定义
     parameter IDLE          = 3'd0;
     parameter FETCH_DATA    = 3'd1;
     parameter DISPATCH      = 3'd2;
@@ -59,12 +59,12 @@ module Controller(
     reg [2:0]   current_state;
     reg [2:0]   next_state;
 
-    reg [223:0] index_vector_reg1;
-    reg [223:0] index_vector_reg2;
+    reg [895:0] index_vector_reg1;
+    reg [895:0] index_vector_reg2;
     reg reg_sel;
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             index_vector_reg1 <= 0;
             index_vector_reg2 <= 0;
         end
@@ -76,12 +76,12 @@ module Controller(
         end
     end
 
-    //  
+    // 状态机：下一个状态逻辑
     always @(*) begin
         next_state = current_state;
         case (current_state)
             IDLE: begin
-                if (!rst) begin
+                if (!rstn) begin
                     next_state = empty? FETCH_SRAM : FETCH_DATA;
                 end
             end
@@ -103,7 +103,7 @@ module Controller(
             end
 
             DISPATCH: begin
-                if (zcip_done) begin  //  
+                if (zcip_done) begin  // 所有ZCIP完成
                     next_state = COMPUTE;
                 end
             end
@@ -123,24 +123,24 @@ module Controller(
             end
         endcase
     end
-    //  
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    // 状态更新
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             current_state <= 0;
         end else begin
             current_state <= next_state;
         end
     end
 
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             reg_sel <= 0;
         end else if(pe_done) begin
             reg_sel <= ~reg_sel;
         end
     end
 
-    //  
+    // 输出逻辑
     always @(*) begin
         a_mode              = 2'b00;
         w_mode              = 2'b00;
@@ -152,7 +152,7 @@ module Controller(
         sram_a_read_address = 0;
         en                  = 1'b0;
         acc_en              = 2'b0;
-        index_vector        = 224'b0;
+        index_vector        = 896'b0;
         done                = 1'b0;
         weight_sign_en      = 0;
         sram_a_read_address = 0;
@@ -172,10 +172,10 @@ module Controller(
             end
 
             FETCH_DATA: begin
-                //   Dispatcher 
+                // 设置 Dispatcher 模块读取地址
                 a_read_address = a_read_address + 1;
                 w_read_address = w_read_address + 1;
-                en = 1'b1;  //  
+                en = 1'b1;  // 启动数据获取
             end
 
             DISPATCH: begin
@@ -183,8 +183,8 @@ module Controller(
             end
 
             COMPUTE: begin
-                // PE 
-                acc_en = 2'b11;  //  
+                // 启动 PE 计算
+                acc_en = 2'b11;  // 启动累加器
                 if (reg_sel) begin
                     index_vector = index_vector_reg1;
                 end else begin
@@ -193,7 +193,7 @@ module Controller(
             end
 
             // CHECK_DONE: begin
-            //     //
+            //     // 检查所有模块是否完成
             //     if (pe_done) begin
             //         done <= 1'b1;
             //     end

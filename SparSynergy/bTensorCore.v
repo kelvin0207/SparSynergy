@@ -22,7 +22,7 @@
 
 module bTensorCore(
     input wire          clk,
-    input wire          rst,
+    input wire          rstn,
     input wire [1023:0] weight_data_in,
     input wire [255:0]  weight_sign_in,
     input wire [255:0]  weight_sel_level0,
@@ -111,10 +111,10 @@ module bTensorCore(
 
     assign result_out = {result_out3, result_out2, result_out1, result_out0};
 
-    // bOctet0  
+    // bOctet0 实例化
     bOctet bOctet0(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_data_in     (weight_data_in0),
         .weight_sign_in     (weight_sign_in0),
         .weight_sel_level0  (weight_sel_level0_in0),
@@ -128,10 +128,10 @@ module bTensorCore(
         .result_out         (result_out0)
     );
 
-    // bOctet1 
+    // bOctet1 实例化
     bOctet bOctet1(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_data_in     (weight_data_in1),
         .weight_sign_in     (weight_sign_in1),
         .weight_sel_level0  (weight_sel_level0_in1),
@@ -145,10 +145,10 @@ module bTensorCore(
         .result_out         (result_out1)
     );
 
-    // bOctet2  
+    // bOctet2 实例化
     bOctet bOctet2(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_data_in     (weight_data_in2),
         .weight_sign_in     (weight_sign_in2),
         .weight_sel_level0  (weight_sel_level0_in2),
@@ -162,10 +162,10 @@ module bTensorCore(
         .result_out         (result_out2)
     );
 
-    //  
+    // bOctet3 实例化
     bOctet bOctet3(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_data_in     (weight_data_in3),
         .weight_sign_in     (weight_sign_in3),
         .weight_sel_level0  (weight_sel_level0_in3),

@@ -22,7 +22,7 @@
 
 module bOctet(
     input wire          clk,
-    input wire          rst,
+    input wire          rstn,
     input wire [255:0]  weight_data_in,
     input wire [63:0]   weight_sign_in,
     input wire [63:0]   weight_sel_level0,
@@ -44,8 +44,8 @@ module bOctet(
     reg [255:0]  activation_in_reg;
     reg [127:0]  psum_data_in_reg;
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             weight_data_in_reg      <= 0;
             weight_sign_in_reg      <= 0;
             weight_sel_level0_reg   <= 0;
@@ -60,16 +60,16 @@ module bOctet(
         end
     end
 
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             activation_in_reg       <= 0;
         end else if(activation_update)begin
             activation_in_reg       <= activation_in;
         end
     end
 
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             psum_data_in_reg       <= 0;
         end else if(psum_update)begin
             psum_data_in_reg       <= psum_data_in;
@@ -84,6 +84,15 @@ module bOctet(
     wire        [15:0] weight_sel2_level1;
     wire        [7:0]  weight_sel3_level0;
     wire        [15:0] weight_sel3_level1;
+
+    wire        [7:0]  weight_sel4_level0;
+    wire        [15:0] weight_sel4_level1;
+    wire        [7:0]  weight_sel5_level0;
+    wire        [15:0] weight_sel5_level1;
+    wire        [7:0]  weight_sel6_level0;
+    wire        [15:0] weight_sel6_level1;
+    wire        [7:0]  weight_sel7_level0;
+    wire        [15:0] weight_sel7_level1;
 
     assign weight_sel0_level0 = weight_sel_level0_reg[7:0];
     assign weight_sel1_level0 = weight_sel_level0_reg[15:8];
@@ -107,7 +116,7 @@ module bOctet(
 
     bThreadgroup bthreadgroup0(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_column0     (weight_data_in_reg[31:0]),
         .weight_column1     (weight_data_in_reg[63:32]),
         .weight_column2     (weight_data_in_reg[95:64]),
@@ -138,7 +147,7 @@ module bOctet(
 
     bThreadgroup bthreadgroup1(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_column0     (weight_data_in_reg[159:128]),
         .weight_column1     (weight_data_in_reg[191:160]),
         .weight_column2     (weight_data_in_reg[223:192]),

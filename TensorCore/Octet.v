@@ -35,7 +35,7 @@ module Octet#(
     parameter C_ADDR_WIDTH    = 3
 )(
     input wire                        clk,
-    input wire                        rst,
+    input wire                        rstn,
     input wire                        start,
     input wire                        fetch_done,
     input wire [A_DATA_WIDTH-1:0]     a_data_in,
@@ -79,18 +79,18 @@ module Octet#(
         .C_ADDR_WIDTH(C_ADDR_WIDTH)
     ) Octet_controller (
         .clk            (clk),
-        .rst            (rst),
-        //  
+        .rstn            (rstn),
+        // TC提供的信号
         .start          (start),
         .fetch_done     (fetch_done),
-        //  
+        // buffer提供的信号
         .buffer_ready   (a_ready & b_ready & c_ready),
-        // 
+        // 输出给TC控制器
         .idle           (idle),
         .fetch          (fetch),
         .compute        (compute),
         .write_back     (write_back),
-        //  
+        // 输出给Octet内部
         .a_wr_en        (a_wr_en),
         .a_rd_en        (a_rd_en),
         .a_rd_addr      (a_rd_addr),
@@ -111,7 +111,7 @@ module Octet#(
         .ADDR_WIDTH(A_ADDR_WIDTH)
     ) A_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (a_wr_en),
         .rd_en      (a_rd_en),
         .data_in    (a_data_in),
@@ -127,7 +127,7 @@ module Octet#(
         .ADDR_WIDTH(B_ADDR_WIDTH)
     )B_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (b_wr_en),
         .rd_en      (b_rd_en),
         .data_in    (b_data_in),
@@ -143,7 +143,7 @@ module Octet#(
         .ADDR_WIDTH(C_ADDR_WIDTH)
     )C_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (c_wr_en),
         .rd_en      (c_rd_en),
         .data_in    (c_data_in_buffer),
@@ -159,7 +159,7 @@ module Octet#(
 
     threadgroup threadgroup0(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_group0      (a_data_out[31:0]),
         .weight_group1      (a_data_out[63:32]),
         .activation_group0  (b_data_out[31:0]),
@@ -176,7 +176,7 @@ module Octet#(
 
     threadgroup threadgroup1(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_group0      (a_data_out[95:64]), // individual
         .weight_group1      (a_data_out[127:96]),
         .activation_group0  (b_data_out[31:0]), // shared

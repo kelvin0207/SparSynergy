@@ -25,19 +25,19 @@ module Octet_controller #(
     parameter B_ADDR_WIDTH = 2,
     parameter C_ADDR_WIDTH = 3
 )(
-    input  wire          clk,           
-    input  wire          rst,           
-    //  
+    input  wire          clk,          // 时钟信号
+    input  wire          rstn,          // 复位信号，低电平有效
+    // TC提供的信号
     input  wire          start,
     input  wire          fetch_done,
-    //  
-    input  wire          buffer_ready, //  
-    //  
-    output reg           idle,      //  
+    // buffer提供的信号
+    input  wire          buffer_ready, // a/b/c buffer 是否准备好
+    // 输出给TC控制器
+    output reg           idle,      // 告诉上一级控制器状态
     output reg           fetch,
     output reg           compute,
     output reg           write_back,
-    //  
+    // 输出给Octet内部
     output reg                      a_wr_en,
     output reg                      a_rd_en,
     output reg [A_ADDR_WIDTH-1:0]   a_rd_addr,
@@ -52,10 +52,10 @@ module Octet_controller #(
     output reg [C_ADDR_WIDTH-1:0]   c_wr_addr
 );
 
-    localparam   IDLE        = 2'b00; //  
-    localparam   FETCH_DATA  = 2'b01; //  
-    localparam   COMPUTE     = 2'b10; //  
-    localparam   WRITE_BACK  = 2'b11; //  
+    localparam   IDLE        = 2'b00; // 空闲状态
+    localparam   FETCH_DATA  = 2'b01; // 数据获取状态
+    localparam   COMPUTE     = 2'b10; // 计算状态
+    localparam   WRITE_BACK  = 2'b11; // 写回状态
 
     reg [1:0]   current_state;
     reg [1:0]   next_state;
@@ -65,13 +65,13 @@ module Octet_controller #(
     wire [1:0]  set_cnt;
     wire        compute_done;
 
-    // 
+    // 地址生成逻辑，根据set和step状态决定；
     assign compute_done = (counter == 5'b1_1111);
     assign step_cnt = counter[2:0];
     assign set_cnt = counter[4:3];
 
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             counter <= 0;
         end else if (current_state==IDLE) begin
             counter <= 0;
@@ -80,7 +80,7 @@ module Octet_controller #(
         end
     end
 
-    //  
+    // 下一状态逻辑
     always @(*) begin
         // default assignment
         next_state = current_state;
@@ -104,16 +104,16 @@ module Octet_controller #(
         endcase
     end
 
-    //  
-    always@(posedge clk or posedge rst) begin
-        if (rst) begin
+    // 更新逻辑
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             current_state <= IDLE;
         end else begin
             current_state <= next_state;
         end
     end
 
-    // 
+    //输出逻辑
     always@(*) begin
         case (current_state) 
             IDLE: begin

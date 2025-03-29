@@ -22,7 +22,7 @@
 
 module bDP(
 	input wire 		  clk,
-    input wire 		  rst,
+    input wire 		  rstn,
 	input wire [63:0] activations,
 	input wire [7:0]  weight_column,
 	input wire [7:0]  weight_sign, 
@@ -30,8 +30,8 @@ module bDP(
 	output reg [15:0] result
 );
 
-	wire [7:0] partial_sum;              //  
-    reg [15:0] aligned_sum;             // 
+	wire [7:0] partial_sum;              // Partial sum for the bit-column
+    reg [15:0] aligned_sum;             // Aligned sum after shifting
 
 	wire [7:0] act0;
 	wire [7:0] act1;
@@ -56,8 +56,8 @@ module bDP(
 	reg [7:0] 	weight_column_reg;
 	reg [2:0] 	shift_offset_reg;
 
-	always@(posedge clk or posedge rst) begin
-		if (rst) begin
+	always@(posedge clk or negedge rstn) begin
+		if (!rstn) begin
 			weight_sign_reg		<= 0;
 			activations_reg		<= 0;
 			weight_column_reg	<= 0;
@@ -153,12 +153,13 @@ module bDP(
 	assign psum5 = {psum2[8], psum2} + {psum3[8], psum3};
 
 	wire	[10:0] psum_total;
+	wire    [15:0] psum_shift;
 
 	assign psum_total = {psum4[9], psum4} + {psum5[9], psum5};
 	assign psum_shift = psum_total << shift_offset_reg;
 
-	always @(posedge clk or posedge rst) begin
-        if (rst) begin
+	always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             result <= 16'b0;
         end else begin
 			result <= psum_shift;

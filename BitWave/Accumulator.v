@@ -22,16 +22,16 @@
 
 module Accumulator(
     input wire clk,
-    input wire rst,
-    input wire [1:0]  en,         // 
-    input wire [15:0] in0,        // 
-    input wire [15:0] in1,        // 
-    input wire [15:0] in2,        // 
-    input wire [15:0] in3,        // 
+    input wire rstn,
+    input wire [1:0]  en,         // 控制信号，决定是否进行累加与累加形式
+    input wire [15:0] in0,        // 第一个输入数据
+    input wire [15:0] in1,        // 第二个输入数据
+    input wire [15:0] in2,        // 第三个输入数据
+    input wire [15:0] in3,        // 第四个输入数据
     input wire        ready,
     output reg        done,
-    // output reg [1:0]  status,     // 
-    output reg [63:0] final_out   // 
+    // output reg [1:0]  status,     // 输出的状态
+    output reg [63:0] final_out   // 最终累加输出（四个16位数据的和）
 );
 
     reg [15:0] sum1;
@@ -40,9 +40,9 @@ module Accumulator(
 
     reg [63:0] tmp_out;
 
-    // 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    // 第一层：两两相加
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             sum1 <= 16'd0;
             sum2 <= 16'd0;
         end else if (en[0]&ready) begin
@@ -51,9 +51,9 @@ module Accumulator(
         end
     end
 
-    // 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    // 第二层：相加sum1和sum2
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             sum3 <= 16'd0;
         end else if (en[1]&ready) begin
             sum3 <= sum1 + sum2;
@@ -69,9 +69,9 @@ module Accumulator(
         endcase
     end
     
-    // 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    // 输出控制
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             final_out <= 16'd0;
             done <= 0;
         end else begin

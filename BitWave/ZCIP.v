@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
-// Engineer:  
+// Engineer: Yang Jingkui
 // 
 // Create Date: 2024/08/27 09:39:16
 // Design Name: Top Controller
@@ -20,7 +20,7 @@
 
 module ZCIP (
     input wire clk,
-    input wire rst,
+    input wire rstn,
     input wire [6:0] index_vector,  // Index vector indicating non-zero bit columns
     output reg [2:0] shift_offset,  // Shift offset for the BCE module
     output reg valid,         // Indicates if the shift offset is valid
@@ -32,8 +32,8 @@ module ZCIP (
 	reg [6:0] index_tmp;
 	reg [2:0] offset_tmp;
 	
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             index_reg <= 7'b0;
             bit_counter <= 3'b0;
         end
@@ -60,8 +60,8 @@ module ZCIP (
 
 	end
 
-    always @(posedge clk or posedge rst) begin
-        if (rst) begin
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             valid       <= 1'b0;
             done        <= 1'b0;
 			shift_offset <= 3'b0;

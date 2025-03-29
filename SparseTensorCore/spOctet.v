@@ -35,7 +35,7 @@ module spOctet#(
     parameter C_ADDR_WIDTH    = 3
 )(
     input wire                        clk,
-    input wire                        rst,
+    input wire                        rstn,
     input wire                        start,
     input wire                        fetch_done,
     input wire [A_DATA_WIDTH-1:0]     a_data_in,
@@ -79,8 +79,8 @@ module spOctet#(
     reg        weight_idx_sel;
     wire [31:0] weight_idx_t;
 
-    always@(posedge clk or posedge rst) begin
-        if(rst) begin
+    always@(posedge clk or negedge rstn) begin
+        if (!rstn) begin
             weight_idx_reg1 <= 0;
             weight_idx_reg2 <= 0;
             weight_idx_sel <= 0;
@@ -103,18 +103,18 @@ module spOctet#(
         .C_ADDR_WIDTH(C_ADDR_WIDTH)
     ) Octet_controller (
         .clk            (clk),
-        .rst            (rst),
-        //  
+        .rstn            (rstn),
+        // TC提供的信号
         .start          (start),
         .fetch_done     (fetch_done),
-        //  
+        // buffer提供的信号
         .buffer_ready   (a_ready & b_ready & c_ready),
-        //  
+        // 输出给TC控制器
         .idle           (idle),
         .fetch          (fetch),
         .compute        (compute),
         .write_back     (write_back),
-        //  
+        // 输出给Octet内部
         .a_wr_en        (a_wr_en),
         .a_rd_en        (a_rd_en),
         .a_rd_addr      (a_rd_addr),
@@ -135,7 +135,7 @@ module spOctet#(
         .ADDR_WIDTH(A_ADDR_WIDTH)
     ) A_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (a_wr_en),
         .rd_en      (a_rd_en),
         .data_in    (a_data_in),
@@ -151,7 +151,7 @@ module spOctet#(
         .ADDR_WIDTH(B_ADDR_WIDTH)
     )B_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (b_wr_en),
         .rd_en      (b_rd_en),
         .data_in    (b_data_in),
@@ -167,7 +167,7 @@ module spOctet#(
         .ADDR_WIDTH(C_ADDR_WIDTH)
     )C_buffer(
         .clk        (clk),
-        .rst        (rst),
+        .rstn        (rstn),
         .wr_en      (c_wr_en),
         .rd_en      (c_rd_en),
         .data_in    (c_data_in_buffer),
@@ -183,13 +183,13 @@ module spOctet#(
 
     spThreadgroup spthreadgroup0(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_group0      (a_data_out[31:0]),
         .weight_group1      (a_data_out[63:32]),
         .weight_idx0        (weight_idx_t[7:0]),
         .weight_idx1        (weight_idx_t[15:8]),
-        .activation_group0  (b_data_out[31:0]),
-        .activation_group1  (b_data_out[63:32]),
+        .activation_group0  (b_data_out[63: 0]),
+        .activation_group1  (b_data_out[127:64]),
         .partial_sum0       (psum[15:0]),
         .partial_sum1       (psum[31:16]),
         .partial_sum2       (psum[47:32]),
@@ -202,13 +202,13 @@ module spOctet#(
 
     spThreadgroup spthreadgroup1(
         .clk                (clk),
-        .rst                (rst),
+        .rstn                (rstn),
         .weight_group0      (a_data_out[95:64]), // individual
         .weight_group1      (a_data_out[127:96]),
         .weight_idx0        (weight_idx_t[23:16]),
         .weight_idx1        (weight_idx_t[31:24]),
-        .activation_group0  (b_data_out[31:0]),
-        .activation_group1  (b_data_out[63:32]),
+        .activation_group0  (b_data_out[63: 0]),
+        .activation_group1  (b_data_out[127:64]),
         .partial_sum0       (psum[79:64]), // individual
         .partial_sum1       (psum[95:80]),
         .partial_sum2       (psum[111:96]),
